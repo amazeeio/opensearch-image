@@ -7,6 +7,7 @@ on:
 
 jobs:
   imagetag:
+    runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.extracttag.outputs.tag }}
     steps:
