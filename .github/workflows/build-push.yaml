@@ -16,7 +16,7 @@ jobs:
     - name: Extract the image version
       id: extracttag
       run: |
-        echo "::set-output name=tag::$(awk -F: '/^FROM/ { print $2 }' Dockerfile)"
+        echo "tag=$(awk -F: '/^FROM/ { print $2 }' Dockerfile)" >> $GITHUB_OUTPUT
   docker:
     runs-on: ubuntu-latest
     needs: imagetag
