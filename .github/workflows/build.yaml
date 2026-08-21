@@ -9,7 +9,7 @@ jobs:
       version: ${{ steps.extracttag.outputs.tag }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Extract the image version
       id: extracttag
       run: |
