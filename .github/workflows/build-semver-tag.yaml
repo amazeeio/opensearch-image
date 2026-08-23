@@ -1,0 +1,41 @@
+name: build-semver-tag
+
+on: pull_request
+
+# tags the image using the major.minor from upstream and appends the PR number to give a semver-like tag.
+# For example, if the upstream image is 2.19.0 and the PR number is 123, the resulting tag will be 2.19.123.
+# This is required for testing as the opensearch chart will only accept semver tags.
+
+jobs:
+  imagetag:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extracttag.outputs.tag }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Extract the image version
+      id: extracttag
+      run: |
+        echo "tag=$(awk '/^FROM/ { split($2, image, ":"); split(image[2], version, "."); print version[1] "." version[2] }' Dockerfile)" >> $GITHUB_OUTPUT
+  build-push:
+    runs-on: ubuntu-latest
+    needs: imagetag
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and push
+      id: docker_build
+      uses: docker/build-push-action@v5
+      with:
+        platforms: linux/amd64,linux/arm64
+        push: ${{ github.actor != 'dependabot[bot]' }} # don't push dependabot PRs
+        tags: ghcr.io/amazeeio/opensearch-aio:${{ needs.imagetag.outputs.version }}.${{ github.event.pull_request.number }}
